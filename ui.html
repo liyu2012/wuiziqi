@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>五子棋</title>
+	<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+	<style type="text/css">
+		#myCanvas{
+			margin: 50px auto;
+			display: block;
+			border: 1px solid #ccc;
+			width: 450px;
+			height: 450px;
+			box-shadow: 5px 5px 3px 1px #bfbfbf;
+		}
+	</style>
+	<script type="text/javascript">
+	window.onload=function(){
+		//赢法数组
+		var over=false;
+		var chessBoard=[];
+		var first=true;
+		var count=0;
+		var winStyles=[];
+		//初始化棋盘状况
+		for (var i = 0 ; i<15; i++) {
+			chessBoard[i]=[];
+			for (var j = 0; j<15; j++) {
+				chessBoard[i][j]=0;
+			}
+		}
+		//初始化赢法数组
+		for (var i = 0; i<15; i++) {
+			winStyles[i]=[];
+			for (var j = 0; j<15; j++) {
+				winStyles[i][j]=[];
+				
+			}
+
+		}
+		for (var i = 0; i<15; i++) {
+			for (var j = 0; j<11; j++) {
+				for (var k = 0; k<5; k++) {
+					winStyles[i][j+k][count]=true;
+				}
+				count++;
+			}
+
+		}
+		for (var i = 0; i<15; i++) {
+			for (var j = 0; j<11; j++) {
+				for (var k = 0; k<5; k++) {
+					winStyles[j+k][i][count]=true;
+				}
+				count++;
+			}
+
+		}
+		for (var i = 0; i<11; i++) {
+			for (var j = 0; j<11; j++) {
+				for (var k = 0; k<5; k++) {
+					winStyles[i+k][j+k][count]=true;
+				}
+				count++;
+			}
+
+		}
+		///反斜线类型赢法
+		for (var i = 0; i<11; i++) {
+			for (var j =14; j>3; j--) {
+				for (var k = 0; k<5; k++) {
+					winStyles[i+k][j-k][count]=true;
+				}
+				count++;
+			}
+
+		}
+//赢法统计数组
+	var	myWin=[];
+		var computerWin=[];
+		for (var i = 0; i<count; i++)
+		 {
+			myWin[i]=0;
+			computerWin[i]=0;
+		}
+//console.log(count);
+		var pane=document.getElementById('myCanvas');
+		//当画布坐标和canvas坐标不一致可以使用设置属性的方式来改变画布坐标
+		pane.setAttribute('width',450);
+		pane.setAttribute('height',450);
+		//alert(pane)
+		var pen=pane.getContext('2d');
+		var logo=new Image();
+		logo.src="../imgs/logo.png";
+		window.onStep=function(i,j,me){
+		
+		   pen.beginPath();
+		   var x=i*30+15,y=j*30+15;
+			pen.arc(x,y,15,0,2*Math.PI); 	
+			pen.closePath();
+
+			//winStyles[x][y][]
+			 var gradient=pen.createRadialGradient(x+2,y+2,3,x,y,15);
+		   // alert(gradient.addColorStop)
+		   if (me==true)
+		    {
+		   	//pen.fillStyle='#000';
+		   gradient.addColorStop(0,"#ccc");
+			gradient.addColorStop(0.7,"#010101");
+5
+		   }
+		   else{
+		   	//pen.fillStyle='#ccc';
+		   	gradient.addColorStop(0,"#fff");
+			gradient.addColorStop(0.8,"#c1c1c1");
+		   }
+			pen.fillStyle=gradient;
+			//pen.strokeStyle=gradient;
+			pen.fill();
+
+			
+			//pen.fillRect(x-10,y-10,x+3,y+3);
+
+		}
+		logo.onload=function(){
+
+			pen.drawImage(logo,0,0,450,450);
+			pen.strokeStyle='#bfbfbf';
+		    pen.lineWidth=1;
+		for (var i = 0; i <15; i++) 
+		{
+			pen.moveTo(15,15+i*30);
+			pen.lineTo(435,15+i*30);
+			pen.stroke();
+			pen.moveTo(15+i*30,15);
+			pen.lineTo(15+i*30,435);
+			pen.stroke();
+
+		}
+		//onStep(1,2,false);
+
+			
+		};
+		pane.onclick=function(e){
+			//判断是否是该人走，或者是否结束
+			if(over||!first)
+			{
+				return ;
+			}
+			//计算咯子点的行列数
+			var x=Math.round((e.offsetX-15)/30);
+			//alert(x);
+			var y=Math.round((e.offsetY-15)/30);
+			//判断棋盘上的网格状态
+			if (chessBoard[x][y]===0) {
+
+				if (first===true) {
+					//first=!first;
+				onStep(x,y,true);
+				chessBoard[x][y]=1;
+			}
+			
+			}
+			
+			
+			for(var k = 0; k <count; k++ ) 
+			{
+				//winStyles[x][y][k]=true;
+				if (winStyles[x][y][k]) {
+					myWin[k]++;
+					computerWin[k]=6;
+					if (myWin[k]==5) {
+						alert('you win!');
+						over=true;
+						location.href='ui.html';
+						break;
+					}
+				}
+			}
+			if (!over) {
+				first=!first;
+				computerAI();
+			}
+			
+		}
+		var computerAI=function(){
+			var myScore=[],computerScore=[],max=0,u=0,v=0;
+			//初始化得分数组
+			for (var i =0; i<15; i++) {
+				myScore[i]=[];
+				computerScore[i]=[];
+				for (var j = 0; j<15; j++) 
+				{
+					myScore[i][j]=0;
+					computerScore[i][j]=0;
+			    }
+			}
+			//遍历棋盘
+			for (var i =0; i<15 ;i++)
+			 {
+				
+				for (var j = 0; j<15; j++) 
+				{
+//判断是否有子
+					if(chessBoard[i][j]==0)
+					{   
+						for (var k = 0; k<count;k++)
+					 {
+						if (winStyles[i][j][k]) 
+						{
+							if (myWin[k]==1) {
+								myScore[i][j]+=200;
+							}
+							else if (myWin[k]==2) {
+								myScore[i][j]+=400;
+							}
+							else if (myWin[k]==3) {
+								myScore[i][j]+=2000;
+							}
+							else if (myWin[k]==4) {
+								myScore[i][j]+=10000;
+							}
+							if (computerWin[k]==1) {
+								computerScore[i][j]+=220;
+							}
+							else if (computerWin[k]==2) {
+								computerScore[i][j]+=420;
+							}
+							else if (computerWin[k]==3) {
+								computerScore[i][j]+=2020;
+							}
+							else if (computerWin[k]==4) {
+								computerScore[i][j]+=10020;
+							}
+						}
+						
+						}
+						if (myScore[i][j]>max) {
+						max=myScore[i][j];
+						u=i;
+						v=j;
+					}
+					else if(myScore[i][j]==max){
+						if (computerScore[i][j]>computerScore[u][v]) {
+							//max=computerScore[i][j];
+							u=i;
+							v=j;
+						}
+
+						
+					}
+						if (computerScore[i][j]>max) {
+						max=computerScore[i][j];
+						u=i;
+						v=j;
+					}
+					else if(computerScore[i][j]==max){
+						if (myScore[i][j]>myScore[u][v]) {
+							u=i;
+							v=j;
+						}
+
+						
+					}
+					}
+
+					}
+			    }
+			    onStep(u,v,false);
+			    chessBoard[u][v]=2;
+			 for(var k = 0; k <count; k++ ) 
+			{
+				
+				if (winStyles[u][v][k]) {
+					computerWin[k]++;
+					myWin[i]=6;
+					if (computerWin[k]==5) {
+						alert('computer win!');
+						location.href="ui.html";
+						over=true;
+						
+					}
+				}
+			}
+			if (!over) {
+				first=!first;
+				
+			}
+				
+
+		}
+		
+		//for(var i in pen)
+			//alert(pen[i]);
+		
+			
+		
+	};
+		
+	</script>
+</head>
+<body>
+<canvas id="myCanvas">
+	
+</canvas>
+</body>
+</html>
