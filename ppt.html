@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>ppt</title>
+	<style type="text/css">
+	body,ul,li,div,a,img{
+		margin:0;
+		padding: 0;
+		list-style: none;
+		display: block;
+	}
+	img{
+		width:100%;
+		height:100% ;
+	}
+	a{
+		width: inherit;
+		height: inherit;
+	}
+		.main{
+			width: 800px;
+			height: 270px;
+			//background: red;
+		}
+		.main ul{
+			width: 800px;
+			height: 270px;
+		//	background: yellow;
+
+		}
+		.main .left-button{
+			position: absolute;
+			width: 100px;
+			height: 270px;
+		
+			top: 0px;
+			//background: green;
+			font-size: 50px;
+			left: 20px;
+			font-weight: 500;
+			color: #ccc;
+			line-height: 270px;
+			cursor: pointer;
+		}
+		.main .right-button{
+			position: absolute;
+			width: 100px;
+			height: 270px;
+			///background :green;
+			top: 0px;
+			right: 20px;
+			font-size: 50px;
+			font-weight: 500;
+			text-indent: 230px;
+			color: #ccc;
+			line-height: 270px;
+			cursor: pointer;
+		}
+		.main ul li{
+			position: absolute;
+			left: 0;
+			top:0;
+		}
+	</style>
+	<script type="text/javascript" src="js/jquery3.1.0.js"></script>
+	<script type="text/javascript">
+		(function($){
+			//实例化类的私有属性
+			var Carousel=function(p){
+				this.self=this;
+				this.p=p;
+				this.rotateFlag=true;
+
+				this.ulDom=p.find('ul').eq(0);
+				this.leftButton=p.find('.left-button');
+				this.rightButton=p.find('.right-button');
+				this.olis=this.ulDom.find('li');
+
+				this.oli=this.olis.eq(0);	
+				if (this.olis.size()%2===0) {
+					this.ulDom.append(this.olis.eq(3).clone());
+					this.olis=this.ulDom.children();
+				}
+				this.level=Math.ceil(this.olis.size()/2);
+				this.settiings={
+				width:1000,
+				height:270,
+				postwidth:300,
+				postheight:270,
+				scale:0.9,
+				speed:500,
+				verticalAlign:'middle'
+			};
+			//给设置参数重新赋值
+			$.extend(this.settiings,this.getSettings());
+			//设置幻灯片属性以及其他图片的位置
+			this.setSettings();
+			this.setOther();
+			 var _this=this;
+			this.rightButton.click(function(){
+				if (_this.rotateFlag===true) {
+					_this.rotateFlag=false;
+					_this.move('right');
+				}
+				
+			});
+			this.leftButton.click(function(){
+				if (_this.rotateFlag===true) {
+					_this.rotateFlag=false;
+					_this.move('left');
+				}
+				
+			});
+			//设置是否自动播放
+			if(this.settiings.autoplay){
+				this.autoPlay();
+				var _this=this;
+				this.p.hover(function(){
+						//var _this=this;
+						clearInterval(_this.timer);
+				},function(){
+					_this.autoPlay();
+				});
+			}
+		//	console.log((this.getSetting()));
+			};
+//定义继承方法
+			Carousel.prototype={
+				//自动播放设置
+				autoPlay:function(){
+							var _this=this;
+						_this.timer=setInterval(function(){
+							_this.rightButton.click();
+						},_this.settiings.delay);
+
+				},
+				//向右滚动
+				
+				move:function(x){
+					var _this=this;
+					var prev=null;
+					var arr=[];
+					if (x==='left') 
+					{
+						this.olis.each(function(){
+						var self=$(this);
+						prev=self.prev().get(0)?self.prev():_this.olis.last();
+						var width=prev.width(),
+						height=prev.height(),
+						zIndex=prev.css('zIndex'),
+						opacity=prev.css('opacity'),
+						left=prev.css('left'),
+						top=prev.css('top');
+						arr.push(zIndex);
+						self.animate({
+							width:width,
+							height:height,
+							//zIndex:zIndex,
+							opacity:opacity,
+							left:left,
+							top:top,
+						},_this.settiings.speed,function(){
+						_this.rotateFlag=true;
+						});
+
+						});
+						this.olis.each(function(i){
+							$(this).css('zIndex',arr[i]);
+						});
+					}
+					if (x==='right') {
+						this.olis.each(function(){
+							var self=$(this),
+						next=self.next().get(0)?self.next():_this.olis.first();
+						var width=next.width(),
+						height=next.height(),
+						zIndex=next.css('zIndex'),
+						opacity=next.css('opacity'),
+						left=next.css('left'),
+						top=next.css('top');
+						arr.push(zIndex);
+						self.animate({
+							width:width,
+							height:height,
+							//zIndex:zIndex,
+							opacity:opacity,
+							left:left,
+							top:top,
+						},_this.settiings.speed,function(){
+							_this.rotateFlag=true;
+						});
+						
+						});
+						this.olis.each(function(i){
+							$(this).css('zIndex',arr[i]);
+						});
+
+					}
+				},
+				//设置剩余图片位置关系
+				setOther:function(){
+					var _this=this;
+					var sliceli=this.olis.slice(1);
+					var rightsize=sliceli.size()/2;
+					var sliceliright=sliceli.slice(0,rightsize);
+					var initialw=this.settiings.postwidth;
+					var initialh=this.settiings.postheight;
+					var gap=(this.settiings.width-this.settiings.postwidth)/2/this.level;
+					var sliceleft=sliceli.slice(rightsize);
+
+					//设置右边帧位置关系
+					sliceliright.each(function(i){
+						
+						
+					var firstleft=(_this.settiings.width-_this.settiings.postwidth)/2;
+					var left=firstleft+initialw;
+					initialw*=_this.settiings.scale;
+					initialh*=_this.settiings.scale;
+					//alert(_this.settiings.level)
+				var j=i;
+						$(this).css({
+							width:initialw,
+							height:initialh,
+							left:left+(++j)*gap-initialw,
+							top:_this.setVerticalAlign(initialh),
+							zIndex:--_this.level,
+							opacity:1/++i,
+						});
+					});
+					//设置右边帧数关系
+					var oloop=Math.ceil(this.olis.size()/2);
+					var lw=sliceliright.last().width();
+					var lh=sliceliright.last().height();
+					sliceleft.each(function(i){
+					initialw*=_this.settiings.scale;
+					initialh*=_this.settiings.scale;
+					//alert(oloop)
+					$(this).css({
+						    width:lw,
+							height:lh,
+							left:(++i)*gap,
+							top:_this.setVerticalAlign(lh),
+							zIndex:i,
+							opacity:1/--oloop,
+					});
+					
+					lw/=_this.settiings.scale;
+					lh/=_this.settiings.scale;
+					});
+
+
+				},
+				//getsettsing you set
+				getSettings:function(){
+					var setting=this.p.attr('data-setting');
+
+					if(setting&&setting!="")
+					return $.parseJSON(setting);
+					return {};
+				},
+				setVerticalAlign:function(h){
+					var type=this.settiings.verticalAlign;
+					var top=0;
+					if (type==="top") {
+						top=0;
+					}
+					if (type==='middle') {
+						top=(this.settiings.height-h)/2;
+					}
+					if (type==='bottom') {
+						top=this.settiings.height-h;
+					}
+					return top;
+				},
+				setSettings:function(){
+					this.p.css({
+						width:this.settiings.width,
+						height:this.settiings.height,
+
+					});
+					this.ulDom.css({
+						width:this.settiings.width,
+						height:this.settiings.height,
+					});
+					var w=(this.settiings.width-this.settiings.postwidth)/2;
+					this.leftButton.css({
+						width:w,
+						height:this.settiings.height,
+						zIndex:Math.ceil(this.olis.size()/2),
+					});
+					this.rightButton.css({
+						width:w,
+						height:this.settiings.height,
+						zIndex:Math.ceil(this.olis.size()/2),
+						left:w+this.settiings.postwidth,
+					});
+					this.oli.css({
+						left:w,
+						width:this.settiings.postwidth,
+						height:this.settiings.height,
+						zIndex:Math.ceil(this.olis.size()/2),
+					});
+				},
+
+			};
+			Carousel.init=function(ps){
+				var _this=this;
+				ps.each(function () {
+					new _this($(this));
+				});
+			}
+			window['Carousel']=Carousel;
+		})(jQuery);
+	</script>
+	<script type="text/javascript">
+		$(function () {
+			//var carousel=new Carousel($('.main').eq(0));
+			var carousels=Carousel.init($('.main'));
+		});
+	</script>
+</head>
+<body>
+<div class="main" data-setting='{
+				"width":1000,
+				"height":270,
+				"postwidth":300,
+				"postheight":270,
+				"abc":0,
+				"scale":0.9,
+				"delay":1000,
+				"speed":1000,
+				"verticalAlign":"middle",
+				"autoplay":true
+			}'>
+	<div class="left-button"><</div>
+	<ul>
+		<li><img src="C://python/pictures/1.jpg"></li>
+		<li><img src="C://python/pictures/2.jpg"></li>
+		<li><img src="C://python/pictures/3.jpg"></li>
+		<li><img src="C://python/pictures/4.jpg"></li>
+		<li><img src="C://python/pictures/5.jpg"></li>
+		<li><img src="C://python/pictures/6.jpg"></li>
+		<li><img src="C://python/pictures/13.jpg"></li>
+		<li><img src="C://python/pictures/23.jpg"></li>
+		<li><img src="C://python/pictures/11.jpg"></li>
+		<li><img src="C://python/pictures/11.jpg"></li>
+	</ul>
+	<div class="right-button">></div>
+</div>
+
+
+</body>
+</html>
